@@ -45,10 +45,10 @@ class UR5e_Gripper_Class:
             time.sleep(1)
             if x[3] == 0:
                 self.gripper.open_gripper_wait()
-                time.sleep(1)
+                time.sleep(0.1)
             elif x[3] == 1:
                 self.gripper.close_gripper_wait()
-                time.sleep(1)
+                time.sleep(0.1)
 
 
         

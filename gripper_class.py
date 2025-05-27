@@ -82,7 +82,7 @@ if __name__ == "__main__":
         print("Bewegung")
         print(x)
 
-        gripper.close_gripper_wait()
+        #gripper.close_gripper_wait()
         
         gripper.open_gripper_wait()
 
