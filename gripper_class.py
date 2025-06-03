@@ -71,6 +71,10 @@ class Schunk_Gripper():
 
     def get_gripper_pos(self) -> float:
         return self.bksb.actual_pos
+    
+    def get_gripper_pos_binary(self) -> bool:
+        """Returns True if gripper is open, False if closed."""
+        return self.bksb.actual_pos > 0.0
 
 
 

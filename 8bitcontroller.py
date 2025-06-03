@@ -1,6 +1,8 @@
 import pygame
 from gripper_class import Schunk_Gripper
 from robot_class import Robot_Class
+from txt_io_class import TxtIOClass
+
 import time 
 # Pygame initialisieren
 pygame.init()
@@ -17,6 +19,10 @@ joystick.init()
 
 Gripper = Schunk_Gripper()
 Robot = Robot_Class()
+TXT_Ouput = TxtIOClass(file_path="output.txt")
+
+
+
 
 
 print(f"Verbunden mit: {joystick.get_name()}")
@@ -63,12 +69,24 @@ try:
 
                 if event.button == 6:
                     
-                    print(Robot.get_pos_xyz())
+                    print(Robot.get_pos_xyz()[0:3])
+                    print(Gripper.get_gripper_pos_binary())
+                    TXT_Ouput.append_tasks([Robot.get_pos_xyz()[0:3].tolist() + [Gripper.get_gripper_pos_binary()]])
+
+
+                
+
+
+
+
+
+                    
+                    
 
                 if event.button == 4:
-                    Robot.append_pos_xyz([0,0,0.001])
+                    Robot.append_pos_xyz([0,0,0.005])
                 if event.button == 5:
-                    Robot.append_pos_xyz([0,0,-0.001])
+                    Robot.append_pos_xyz([0,0,-0.005])
 
                 
 
@@ -112,16 +130,16 @@ try:
                 print(f"D-Pad: {hat_map.get(event.value, f'Unbekannt {event.value}')}")
                 if event.value == (0, 1):
                     print("D-Pad Up")
-                    Robot.append_pos_xyz([0.001,0,0])
+                    Robot.append_pos_xyz([0.005,0,0])
                 elif event.value == (0, -1):
                     print("D-Pad Down")
-                    Robot.append_pos_xyz([-0.001,0,0])
+                    Robot.append_pos_xyz([-0.005,0,0])
                 elif event.value == (-1, 0):
                     print("D-Pad Left")
-                    Robot.append_pos_xyz([0,0.001,0])
+                    Robot.append_pos_xyz([0,0.005,0])
                 elif event.value == (1, 0):
                     print("D-Pad Right")
-                    Robot.append_pos_xyz([0,-0.001,0])
+                    Robot.append_pos_xyz([0,-0.005,0])
 
 
 

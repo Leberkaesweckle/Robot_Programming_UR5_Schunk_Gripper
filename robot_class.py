@@ -21,7 +21,7 @@ class Robot_Class:
         soll_tcp_pose[4] = ist_tcp_pose[4]
         soll_tcp_pose[5] = ist_tcp_pose[5]
 
-        self.rtde_c.moveL(soll_tcp_pose,0.05,0.05)
+        self.rtde_c.moveL(soll_tcp_pose,1,1)
         pass
 
     def append_pos_xyz(self, pos):        
@@ -34,7 +34,7 @@ class Robot_Class:
         soll_tcp_pose[4] = ist_tcp_pose[4]
         soll_tcp_pose[5] = ist_tcp_pose[5] 
 
-        self.rtde_c.moveL(soll_tcp_pose, 0.1, 0.1)
+        self.rtde_c.moveL(soll_tcp_pose, 1, 1)
         pass
 
 

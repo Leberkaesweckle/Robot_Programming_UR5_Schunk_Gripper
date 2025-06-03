@@ -13,7 +13,7 @@ class UR5e_Gripper_Class:
         self.gripper = Schunk_Gripper()
         self.robot = Robot_Class()
 
-    def read_tasks(self, dateipfad = "simple_task.txt"):
+    def read_tasks(self, dateipfad = "output.txt"):
         
 
         daten = []
@@ -51,12 +51,25 @@ class UR5e_Gripper_Class:
                 time.sleep(0.1)
 
 
+    def action_move(self,x):
+        self.robot.set_pos_xyz(x[0:3])
+        time.sleep(0.1)
+
+        #####Flipped
+        if x[3] == 1:
+            self.gripper.open_gripper_wait()
+            time.sleep(0.1)
+        elif x[3] == 0:
+            self.gripper.close_gripper_wait()
+            time.sleep(0.1)
+
+
         
 
 if __name__ == "__main__":
     ur5e_gripper = UR5e_Gripper_Class()
     ur5e_gripper.read_tasks()
-    ur5e_gripper.set_home_pos()
+    
 
     ur5e_gripper.action()
     
