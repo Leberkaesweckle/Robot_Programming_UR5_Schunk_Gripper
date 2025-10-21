@@ -6,9 +6,10 @@ from bkstools.scripts.bks_grip import WaitGrippedOrError
 
 class Schunk_Gripper():
 
-    def __init__(self, host = "192.168.2.105"):
-
+    def __init__(self, host = "192.168.2.105", force = 100):
+        """Initialisiert die Schunk_Gripper-Klasse und stellt eine Verbindung zum Greifer her."""
         self.bksb = BKSBase(host)
+        self.force = force
         
     def input(self,prompt ):
         '''alias
@@ -21,8 +22,9 @@ class Schunk_Gripper():
         return keep_communication_alive_sleep(self.bksb,t)
 
     def close_gripper_wait(self):
+        """Schließt den Greifer und wartet, bis der Greifvorgang abgeschlossen ist oder ein Fehler auftritt."""
         self.bksb.command_code = eCmdCode.CMD_ACK
-        self.bksb.set_force = 100 
+        self.bksb.set_force = self.force
         self.bksb.set_vel =  0.0   
         self.bksb.grp_dir = False
         self.bksb.command_code = eCmdCode.MOVE_FORCE 
@@ -30,8 +32,9 @@ class Schunk_Gripper():
         pass
 
     def open_gripper_wait(self):
+        """Öffnet den Greifer und wartet, bis der Öffnungsvorgang abgeschlossen ist oder ein Fehler auftritt."""
         self.bksb.command_code = eCmdCode.CMD_ACK
-        self.bksb.set_force = 100 
+        self.bksb.set_force = self.force 
         self.bksb.set_vel =  0.0 
         self.bksb.grp_dir = True
         self.bksb.command_code = eCmdCode.MOVE_FORCE 
@@ -39,16 +42,18 @@ class Schunk_Gripper():
         pass
 
     def open_gripper(self):
+        """Öffnet den Greifer."""
         self.bksb.command_code = eCmdCode.CMD_ACK
-        self.bksb.set_force = 100 
+        self.bksb.set_force = self.force
         self.bksb.set_vel =  0.0 
         self.bksb.grp_dir = True
         self.bksb.command_code = eCmdCode.MOVE_FORCE 
         pass
 
     def close_gripper(self):
+        """Schließt den Greifer."""
         self.bksb.command_code = eCmdCode.CMD_ACK
-        self.bksb.set_force = 100 
+        self.bksb.set_force = self.force 
         self.bksb.set_vel =  0.0   
         self.bksb.grp_dir = False
         self.bksb.command_code = eCmdCode.MOVE_FORCE 
@@ -56,6 +61,7 @@ class Schunk_Gripper():
     
 
     def set_position(self, position: float):
+        """Setzt die Position des Greifers auf den angegebenen Wert."""
         self.bksb.set_pos = position
         self.bksb.set_vel =  50.0
         self.bksb.command_code = eCmdCode.MOVE_POS
@@ -63,6 +69,7 @@ class Schunk_Gripper():
     
 
     def action_gripper(self, action: bool):
+        """Öffnet oder schließt den Greifer basierend auf dem angegebenen Aktionswert. Bool - True: Öffnen, False: Schließen."""
         if action:
             self.open_gripper()
         else:
@@ -70,6 +77,7 @@ class Schunk_Gripper():
         pass
 
     def get_gripper_pos(self) -> float:
+        """Gibt die aktuelle Position des Greifers zurück."""
         return self.bksb.actual_pos
     
     def get_gripper_pos_binary(self) -> bool:
@@ -82,13 +90,15 @@ class Schunk_Gripper():
 
 if __name__ == "__main__":
     gripper = Schunk_Gripper()
-    for x in range(10):
-        print("Bewegung")
-        print(x)
-
-        #gripper.close_gripper_wait()
-        
-        gripper.open_gripper_wait()
+    print("Schunk Gripper Class created")
+    print("Current Position of Gripper:")
+    print(gripper.get_gripper_pos())
+    gripper.close_gripper_wait()    
+    print("Position after closing:")
+    print(gripper.get_gripper_pos())
+    gripper.open_gripper_wait()
+    print("Position after opening:")
+    print(gripper.get_gripper_pos())
 
     
     
