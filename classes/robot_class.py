@@ -5,10 +5,12 @@ import torch
 
 
 class Robot_Class:
-    def __init__(self, ROBOT_IP = "192.168.2.200" ):
+    def __init__(self, ROBOT_IP = "192.168.2.200", only_jog = False):
         """Initialisiert die Robot_Class mit der angegebenen ROBOT_IP und stellt eine Verbindung zum Roboter her."""
         self.ROBOT_IP = ROBOT_IP
         self.connect()
+
+        self.only_jog = only_jog
         self.move_factor = 0.4 
         self.acc = 0.2
         self.x_max = 0.85
@@ -48,7 +50,7 @@ class Robot_Class:
 
 
     def set_pos_xyz(self, pos):
-        """Setzt die Position des Roboters auf die angegebenen Koordinaten."""
+        """Setzt die Position des Roboters auf die angegebenen Koordinaten."""        
         ist_tcp_pose = self.rtde_r.getActualTCPPose()
         soll_tcp_pose = [0,0,0,0,0,0]
         soll_tcp_pose[0] = pos[0]
@@ -68,9 +70,9 @@ class Robot_Class:
         soll_tcp_pose[0] = ist_tcp_pose[0] + pos[0]  
         soll_tcp_pose[1] = ist_tcp_pose[1] + pos[1]
         soll_tcp_pose[2] = ist_tcp_pose[2] + pos[2]
-        soll_tcp_pose[3] = ist_tcp_pose[3] 
-        soll_tcp_pose[4] = ist_tcp_pose[4]
-        soll_tcp_pose[5] = ist_tcp_pose[5] 
+        soll_tcp_pose[3] = ist_tcp_pose[3] + pos[3]
+        soll_tcp_pose[4] = ist_tcp_pose[4] + pos[4]
+        soll_tcp_pose[5] = ist_tcp_pose[5] + pos[5]
 
         self.moveL_xyz(soll_tcp_pose, 0.1,0.1)
         pass
@@ -82,9 +84,9 @@ class Robot_Class:
         soll_tcp_pose[0] = ist_tcp_pose[0] + pos[0]  
         soll_tcp_pose[1] = ist_tcp_pose[1] + pos[1]
         soll_tcp_pose[2] = ist_tcp_pose[2] + pos[2]
-        soll_tcp_pose[3] = ist_tcp_pose[3] 
-        soll_tcp_pose[4] = ist_tcp_pose[4]
-        soll_tcp_pose[5] = ist_tcp_pose[5] 
+        soll_tcp_pose[3] = ist_tcp_pose[3] + pos[3]
+        soll_tcp_pose[4] = ist_tcp_pose[4] + pos[4]
+        soll_tcp_pose[5] = ist_tcp_pose[5] + pos[5]
 
         self.moveL_xyz(soll_tcp_pose, 0.1,0.1, True)
         pass
@@ -104,14 +106,17 @@ class Robot_Class:
         pass
 
     def set_jogStart(self, move):
-        """Startet die Jog-Bewegung des Roboters mit den angegebenen Bewegungswerten."""
-      
+        """Startet die Jog-Bewegung des Roboters mit den angegebenen Bewegungswerten."""       
+        
         soll_move = [0,0,0,0,0,0]
         soll_move[0] = move[0] * self.move_factor
         soll_move[1] = move[1] * self.move_factor
         soll_move[2] = move[2] * self.move_factor
+        soll_move[3] = move[3] * self.move_factor
+        soll_move[4] = move[4] * self.move_factor
+        soll_move[5] = move[5] * self.move_factor
 
-        move = self.apply_save_range(soll_move[0],soll_move[1],soll_move[2])
+        move = self.apply_save_range(soll_move[0],soll_move[1],soll_move[2], soll_move[3], soll_move[4], soll_move[5])
         self.last_move_jog = move
         self.rtde_c.jogStart(speeds = move, acc = self.acc)
         pass
@@ -142,11 +147,16 @@ class Robot_Class:
 
 
     def moveL_xyz(self, pos, vel = 0.1, acc = 0.1, asyncmode = False):
+
+        if self.only_jog:
+            print("Only jog mode active, moveL_xyz skipped")
+            return
+        
         """Bewegt den Roboter linear zu den angegebenen Koordinaten mit der angegebenen Geschwindigkeit und Beschleunigung."""
         
         try: 
             self.rtde_c.jogStop()
-            move = self.apply_save_range(pos[0], pos[1], pos[2])
+            move = self.apply_save_range(pos[0], pos[1], pos[2],0,0,0)
             done = self.rtde_c.moveL(pos,vel,acc, asyncmode)
         except Exception as e:
             print(f"Error in moveL_xyz: {e}")
@@ -170,6 +180,10 @@ class Robot_Class:
         self.rtde_c.moveJ([-0.2713, -1.5946, 1.5636, -1.5399, -1.5708, 1.2995],acceleration = 0.1)
         pass
 
+
+   
+    
+
     ##Function that sets values that are lower than a threshold to zero
     def apply_deadzone(self,value, threshold=0.01):
         """Wendet eine Totzone auf den angegebenen Wert an. Werte unterhalb des Schwellenwerts werden auf Null gesetzt."""
@@ -177,8 +191,9 @@ class Robot_Class:
             return 0.0
         return value
     
+    
 
-    def apply_save_range(self,x,y,z):
+    def apply_save_range(self,x,y,z,u,v,w):
 
         """Wendet Sicherheitsprüfungen auf die angegebenen Bewegungswerte an und gibt die angepassten Werte zurück."""
 
@@ -268,7 +283,7 @@ class Robot_Class:
 
         
 
-        move = [x,y,z,0,0,0]
+        move = [x,y,z,u,v,w]
         return move
     
     def set_jogStop(self):

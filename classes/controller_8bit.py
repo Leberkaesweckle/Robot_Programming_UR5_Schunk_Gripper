@@ -4,6 +4,7 @@ from classes.robot_class import Robot_Class
 from classes.txt_io_class import TxtIOClass
 from classes.camera_class import camera_class
 from classes.sound_class import sounds
+import sys
 
 import time
 import threading
@@ -40,6 +41,7 @@ class Controller_Loop():
 
         ### Kamera Logging aktivieren/deaktivieren
         self.log_camera = False
+        
 
         ### Kamera Konfiguration
         serial_robot = "825312071832"
@@ -114,7 +116,30 @@ class Controller_Loop():
             (0, 0): 'D-Pad Neutral'
         }
 
-        self.scale = 0.1
+        self.scale_xyz = 0.1
+        self.scale_rot = 1
+
+
+
+        if sys.platform.startswith('linux'):
+            # Die Indizes, die Sie im Prompt angegeben haben, sind wahrscheinlich die korrekten Linux-Werte
+            self.X_AXIS = 3
+            self.Y_AXIS = 2
+            self.Z_AXIS = 1
+            
+        elif sys.platform == 'win32':
+            # Beispielwerte für Windows (passen Sie diese bei Bedarf an)
+            self.X_AXIS = 4 
+            self.Y_AXIS = 3
+            self.Z_AXIS = 1 # Oft sind die Trigger oder ein Slider die Z-Achse unter Windows
+            
+        else:
+            # Fallback für andere Systeme
+            self.X_AXIS = 0
+            self.Y_AXIS = 1
+            self.Z_AXIS = 2 
+
+            
 
         pass
 
@@ -124,18 +149,30 @@ class Controller_Loop():
             while True:
                 try:
                     # Joystick-Achsen
-                    x = self.joystick.get_axis(4)  # X-Achse
-                    y = self.joystick.get_axis(3)  # Y-Achse
-                    z = self.joystick.get_axis(1)  # Z-Achse
+                    
+                    x = self.joystick.get_axis(self.X_AXIS)  # X-Achse
+                    y = self.joystick.get_axis(self.Y_AXIS)  # Y-Achse
+                    z = self.joystick.get_axis(self.Z_AXIS)  # Z-Achse
+                     # U-Achse
 
                     x = self.Robot.apply_deadzone(x)
                     y = self.Robot.apply_deadzone(y)
                     z = self.Robot.apply_deadzone(z)
+                    
+
+                    if self.joystick.get_button(8):  # L3 gedrückt
+                        w = 0.5                  
+
+                    elif self.joystick.get_button(9):  # R3 gedrückt
+                        w = -0.5
+
+                    else:
+                        w = 0.0
 
                     open_gripper = False
                     close_gripper = False
 
-                    self.Robot.set_jogStart([x * self.scale * -1, y * self.scale * -1, z * self.scale * -1, 0, 0, 0])
+                    self.Robot.set_jogStart([x * self.scale_xyz * -1, y * self.scale_xyz * -1, z * self.scale_xyz * -1, 0, 0, w* self.scale_rot])
 
                     for event in pygame.event.get():
                         # Button gedrückt oder losgelassen
@@ -193,9 +230,11 @@ class Controller_Loop():
                                 self.TXT_Ouput.append_tasks([self.Robot.get_pos_xyz()[0:3].tolist() + [self.Gripper.get_gripper_pos_binary()]])
 
                             elif event.button == 8:
-                                self.Robot.append_pos_xyz([0, 0, 0.005])
+                                #self.Robot.append_pos_xyz([0, 0, 0, 0, 0, 0.5])
+                                pass
                             elif event.button == 9:
-                                self.Robot.append_pos_xyz([0, 0, -0.005])
+                                #self.Robot.append_pos_xyz([0, 0, 0, 0, 0, -0.5])
+                                pass
 
                         elif event.type == pygame.JOYBUTTONUP:
                             print(f"Button losgelassen: {self.button_map.get(event.button, f'Unbekannt ({event.button})')}")
@@ -203,13 +242,13 @@ class Controller_Loop():
                         elif event.type == pygame.JOYHATMOTION:
                             print(f"D-Pad: {self.hat_map.get(event.value, f'Unbekannt {event.value}')}")
                             if event.value == (0, 1):
-                                self.Robot.append_pos_xyz([0.005, 0, 0])
+                                self.Robot.append_pos_xyz([0.005, 0, 0, 0, 0, 0])
                             elif event.value == (0, -1):
-                                self.Robot.append_pos_xyz([-0.005, 0, 0])
+                                self.Robot.append_pos_xyz([-0.005, 0, 0, 0, 0, 0])
                             elif event.value == (-1, 0):
-                                self.Robot.append_pos_xyz([0, 0.005, 0])
+                                self.Robot.append_pos_xyz([0, 0.005, 0, 0, 0, 0])
                             elif event.value == (1, 0):
-                                self.Robot.append_pos_xyz([0, -0.005, 0])
+                                self.Robot.append_pos_xyz([0, -0.005, 0, 0, 0, 0])
 
                         # clear events falls nötig
                         # pygame.event.clear()  # optional hier deaktiviert, weil wir bereits events iterieren
