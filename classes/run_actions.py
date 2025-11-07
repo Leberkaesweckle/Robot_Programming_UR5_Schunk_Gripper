@@ -1,7 +1,7 @@
 import ast  # für sicheres Parsen von Listen aus Strings
 import time
-from classes.gripper_class import Schunk_Gripper
-from classes.robot_class import Robot_Class
+from gripper_class import Schunk_Gripper
+from robot_class import Robot_Class
 
 # Pfad zur Datei (anpassen!)
 

@@ -9,6 +9,8 @@ class Robot_Class:
         """Initialisiert die Robot_Class mit der angegebenen ROBOT_IP und stellt eine Verbindung zum Roboter her."""
         self.ROBOT_IP = ROBOT_IP
         self.connect()
+        self.move_factor = 0.4 
+        self.acc = 0.2
         self.x_max = 0.85
         self.x_min = -0.85
         self.y_max = 0.85
@@ -26,10 +28,10 @@ class Robot_Class:
         
         self.force_max_x = 20
         self.force_max_y = 20
-        self.force_max_z = 25
+        self.force_max_z = 30
         self.force_max_reset_x = 25
         self.force_max_reset_y = 25
-        self.force_max_reset_z = 30
+        self.force_max_reset_z = 35
         self.reset_jog_value = 0.00
         self.max_reset_jog_value = 0.35
         self.torque_max = 5.0
@@ -103,16 +105,40 @@ class Robot_Class:
 
     def set_jogStart(self, move):
         """Startet die Jog-Bewegung des Roboters mit den angegebenen Bewegungswerten."""
-        acc = 0.2
+      
         soll_move = [0,0,0,0,0,0]
-        soll_move[0] = move[0]
-        soll_move[1] = move[1]
-        soll_move[2] = move[2]
+        soll_move[0] = move[0] * self.move_factor
+        soll_move[1] = move[1] * self.move_factor
+        soll_move[2] = move[2] * self.move_factor
 
         move = self.apply_save_range(soll_move[0],soll_move[1],soll_move[2])
         self.last_move_jog = move
-        self.rtde_c.jogStart(speeds = move, acc = acc)
+        self.rtde_c.jogStart(speeds = move, acc = self.acc)
         pass
+
+    def set_acc_higer(self):
+        self.acc = self.acc + 0.01
+        if self.acc > 0.2:
+            self.acc = 0.2
+        print(f"Acceleration set to {self.acc}"
+              )
+        self.move_factor = self.move_factor +0.1
+        if self.move_factor > 1:
+            self.move_factor = 1
+        print(f"Move factor set to {self.move_factor}"
+              )
+        
+    def set_acc_lower(self):
+        self.acc = self.acc - 0.01
+        if self.acc < 0.05:
+            self.acc = 0.05
+        print(f"Acceleration set to {self.acc}"
+              )
+        
+        self.move_factor = self.move_factor -0.1
+        if self.move_factor < 0.1:
+            self.move_factor = 0.1
+        print(f"Move factor set to {self.move_factor}")
 
 
     def moveL_xyz(self, pos, vel = 0.1, acc = 0.1, asyncmode = False):
@@ -158,27 +184,7 @@ class Robot_Class:
 
         pos = self.get_pos_xyz()
 
-        ###Cube check
-
-        if (pos[0] + x) > self.x_max or (pos[0] + x) < self.x_min:
-            x = 0
-        if (pos[1] + y) > self.y_max or (pos[1] + y) < self.y_min:
-            y = 0
-        if (pos[2] + z) > self.z_max or (pos[2] + z) < self.z_min:
-            z = 0
-
-        ###Sphere check
-        if torch.sqrt((pos[0] + x)**2 + (pos[1] + y)**2 + (pos[2] + z)**2) > self.sphere_radius:
-            x = 0
-            y = 0
-            z = 0
-        
-
-        ###Inner square check robot should not enter
-        if (pos[0] + x) < self.inner_x_max and (pos[0] + x) > self.inner_x_min:
-            if (pos[1] + y) < self.inner_y_min and (pos[1] + y) > self.inner_y_max:
-                x = 0
-                y = 0
+      
 
         ###Force check
 
@@ -237,7 +243,27 @@ class Robot_Class:
             z = -self.max_reset_jog_value
 
 
-       
+         ###Cube check
+
+        if (pos[0] + x) > self.x_max or (pos[0] + x) < self.x_min:
+            x = 0
+        if (pos[1] + y) > self.y_max or (pos[1] + y) < self.y_min:
+            y = 0
+        if (pos[2] + z) > self.z_max or (pos[2] + z) < self.z_min:
+            z = 0
+
+        ###Sphere check
+        if torch.sqrt((pos[0] + x)**2 + (pos[1] + y)**2 + (pos[2] + z)**2) > self.sphere_radius:
+            x = 0
+            y = 0
+            z = 0
+        
+
+        ###Inner square check robot should not enter
+        if (pos[0] + x) < self.inner_x_max and (pos[0] + x) > self.inner_x_min:
+            if (pos[1] + y) < self.inner_y_min and (pos[1] + y) > self.inner_y_max:
+                x = 0
+                y = 0
 
 
         

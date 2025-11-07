@@ -1,5 +1,5 @@
 import pygame
-from depaletieren import Depaletieren
+from classes.depaletieren import Depaletieren
 
 import time 
 # Pygame initialisieren
