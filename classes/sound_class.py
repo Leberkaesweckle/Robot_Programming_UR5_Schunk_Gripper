@@ -18,7 +18,7 @@ class sounds():
 
     def play_horn(self):
         horn_file = Path("classes")/ "Assets" / "Horn.wav"
-        self.sound_horn = pygame.mixer.Sound(str("classes/assets/Horn.wav"))
+        self.sound_horn = pygame.mixer.Sound(str(horn_file))
         self.sound_horn.set_volume(1)
         self.sound_horn.play()   
 
