@@ -1,5 +1,5 @@
 import pygame
-from classes.gripper_class import Schunk_Gripper
+#from classes.gripper_class import Schunk_Gripper
 from classes.robot_class import Robot_Class
 from classes.txt_io_class import TxtIOClass
 from classes.camera_class import camera_class
@@ -23,7 +23,7 @@ class Controller_Loop():
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
 
-        self.Gripper = Schunk_Gripper()
+        #self.Gripper = Schunk_Gripper()
         self.Robot = Robot_Class()
         self.TXT_Ouput = TxtIOClass(file_path="output.txt")
         self.Sound = sounds()
@@ -98,12 +98,14 @@ class Controller_Loop():
             1: 'B',
             2: 'Speed_UP',
             5: 'Speed_DOWN',
-            3: 'Y',
+            4: 'Y',
+            3: 'X',
             10: 'Minus',
             11: 'Select',  # deine Taste 11
-            7: 'Start',
+            7: 'Sauger_OFF',
             8: 'L3',
-            9: 'R3'
+            9: 'R3',
+            6: "Sauger_ON",
         }
 
         self.hat_map = {
@@ -143,13 +145,38 @@ class Controller_Loop():
                             btn_name = self.button_map.get(event.button, f'Unbekannt ({event.button})')
                             print(f"Button gedrückt: {btn_name}")
 
+                            if event.button == 4:
+                                ##change tool
+                                self.Robot.set_jogStop()
+                                time.sleep(0.1)
+                                self.Robot.dual_tools_switch(tool=1)    
+                                time.sleep(5)                              
+                                                            
+                                
+                            if event.button == 3:
+                                ##change tool
+                                self.Robot.set_jogStop()
+                                time.sleep(0.1)
+                                self.Robot.dual_tools_switch(tool=2)
+                                time.sleep(5)                              
+
                             if event.button == 1:
-                                self.Gripper.close_gripper()
+                                #self.Gripper.close_gripper()                              
+                                self.Robot.open_gripper()
                                 close_gripper = True
 
                             elif event.button == 0:
-                                self.Gripper.open_gripper()
+                                self.Robot.close_gripper()
+                                #self.Gripper.open_gripper()
                                 open_gripper = True
+
+                            elif event.button == 7:
+                                self.Robot.vacuum_on()
+                                time.sleep(0.1)
+                            
+                            elif event.button == 6:
+                                self.Robot.vacuum_off()
+                                time.sleep(0.1)
 
                             elif event.button == 2:
                                 self.Robot.set_acc_higer()
@@ -160,7 +187,7 @@ class Controller_Loop():
                             elif event.button == 11:
                                 # Taste 11: Kameras neu initialisieren (neue Instances)
                                 self.Robot.set_home_pos()
-                                self.Gripper.open_gripper_wait()
+                                #self.Gripper.open_gripper_wait()
                                 self.latest_state["frame"] = 0                                  
                                 print("Taste 11 gedrückt: Kameras werden neu gestartet...")
                                 if self.log_camera:
@@ -189,9 +216,10 @@ class Controller_Loop():
 
                             elif event.button == 6:
                                 print(self.Robot.get_pos_xyz()[0:3])
-                                print(self.Gripper.get_gripper_pos_binary())
-                                self.TXT_Ouput.append_tasks([self.Robot.get_pos_xyz()[0:3].tolist() + [self.Gripper.get_gripper_pos_binary()]])
-
+                                #print(self.Gripper.get_gripper_pos_binary())
+                                #self.TXT_Ouput.append_tasks([self.Robot.get_pos_xyz()[0:3].tolist() + [self.Gripper.get_gripper_pos_binary()]])
+                                self.TXT_Ouput.append_tasks([self.Robot.get_pos_xyz()[0:3].tolist() ])
+                            
                             elif event.button == 8:
                                 self.Robot.append_pos_xyz([0, 0, 0.005])
                             elif event.button == 9:

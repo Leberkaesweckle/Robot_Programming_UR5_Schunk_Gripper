@@ -1,6 +1,11 @@
+import io
 from rtde_control import RTDEControlInterface
 from rtde_receive import RTDEReceiveInterface
+from rtde_control import RTDEControlInterface as RTDEControl
+from rtde_io import RTDEIOInterface
 import torch
+import time
+
 
 
 
@@ -11,13 +16,13 @@ class Robot_Class:
         self.connect()
         self.move_factor = 0.4 
         self.acc = 0.2
-        self.x_max = 0.85
-        self.x_min = -0.85
-        self.y_max = 0.85
-        self.y_min = -0.85
-        self.z_max = 0.85
-        self.z_min = 0.0029
-        self.sphere_radius = 0.9
+        self.x_max = 2
+        self.x_min = -2
+        self.y_max = 2
+        self.y_min = -2
+        self.z_max = 2
+        self.z_min = -2
+        self.sphere_radius = 3
 
         self.inner_x_max = 0.20
         self.inner_x_min = -0.20
@@ -43,9 +48,111 @@ class Robot_Class:
             if self.rtde_c.isConnected() and self.rtde_r.isConnected():
                 return       
 
-        self.rtde_c = RTDEControlInterface(self.ROBOT_IP)
-        self.rtde_r = RTDEReceiveInterface(self.ROBOT_IP)
+        self.rtde_c = RTDEControlInterface(self.ROBOT_IP,500, RTDEControl.FLAG_CUSTOM_SCRIPT)
+        self.rtde_r = RTDEReceiveInterface(self.ROBOT_IP)  
+        self.io = RTDEIOInterface(self.ROBOT_IP)     
+        
+        print("Connected to Robot")
 
+    
+    def dual_tools_switch(self, tool = 1):
+        if tool == 1:
+
+            print("Tool 1 selected")
+            ist_tcp_pose = self.rtde_r.getActualTCPPose()
+            print(f"Current TCP Pose: {ist_tcp_pose}")
+
+            # TCP in [m, m, m, rad, rad, rad]
+            soll_tcp = [0, 0, 0, 0, 0, 0]
+            soll_tcp[0] = 154.09/ 1000.0   # X in m
+            soll_tcp[1] = 0.74  / 1000.0   # Y in m
+            soll_tcp[2] = 138.44  / 1000.0   # Z in m
+            soll_tcp[3] = 0.0828          # rx in rad
+            soll_tcp[4] = -2.3133           # ry in rad
+            soll_tcp[5] = -0.0447           # rz in rad
+
+            self.rtde_c.setTcp(soll_tcp)
+
+            ist_tcp_pose = self.rtde_r.getActualTCPPose()
+            print(f"New TCP Pose: {ist_tcp_pose}")
+
+
+            soll_pos = [0,0,0,0,0,0]
+            soll_pos[0] = ist_tcp_pose[0] 
+            soll_pos[1] = ist_tcp_pose[1]
+            soll_pos[2] = ist_tcp_pose[2] 
+            soll_pos[3] = 0 
+            soll_pos[4] = 0
+            soll_pos[5] = 0 
+
+            self.moveL_xyz(soll_pos, 0.1,0.1, True)                   
+         
+        
+        elif tool == 2:
+            print("Tool 2 selected")
+            ist_tcp_pose = self.rtde_r.getActualTCPPose()
+            print(f"Current TCP Pose: {ist_tcp_pose}")
+
+            # TCP in [m, m, m, rad, rad, rad]
+            soll_tcp = [0, 0, 0, 0, 0, 0]
+            soll_tcp[0] = -156.37 / 1000.0   # X in m
+            soll_tcp[1] = -1.05   / 1000.0   # Y in m
+            soll_tcp[2] = 140.92  / 1000.0   # Z in m
+            soll_tcp[3] = -0.00083          # rx in rad
+            soll_tcp[4] =  2.3956           # ry in rad
+            soll_tcp[5] = -0.0025           # rz in rad
+
+            self.rtde_c.setTcp(soll_tcp)
+
+            ist_tcp_pose = self.rtde_r.getActualTCPPose()
+            print(f"New TCP Pose: {ist_tcp_pose}")
+
+
+            soll_pos = [0,0,0,0,0,0]
+            soll_pos[0] = ist_tcp_pose[0] 
+            soll_pos[1] = ist_tcp_pose[1] 
+            soll_pos[2] = ist_tcp_pose[2] 
+            soll_pos[3] = 0 
+            soll_pos[4] = 0
+            soll_pos[5] = 0 
+
+            self.moveL_xyz(soll_pos, 0.1,0.1, True)            
+           
+        else: 
+            print("Tool not recognized")
+            return
+    
+    def open_gripper(self):  
+        # 0 = None, 1 = Öffnen, 2 = Schließen
+        #Öffnen des Greifers
+        self.io.setInputIntRegister(18, 1) 
+        time.sleep(0.1)
+        self.io.setInputIntRegister(18, 0)           
+       
+
+    def close_gripper(self):
+        # 0 = None, 1 = Öffnen, 2 = Schließen
+        #Schließen des Greifers
+        self.io.setInputIntRegister(18, 2)
+        time.sleep(0.1)
+        self.io.setInputIntRegister(18, 0)
+        
+
+    def vacuum_on(self):
+        # 0 = None, 1 = Aktivieren, 2 = Deaktivieren
+        #Aktivieren des Vakuums
+        self.io.setInputIntRegister(20, 1)
+        time.sleep(0.1)
+        self.io.setInputIntRegister(20, 0)  
+        
+    def vacuum_off(self):
+        # 0 = None, 1 = Aktivieren, 2 = Deaktivieren
+        #Deaktivieren des Vakuums
+        self.io.setInputIntRegister(20, 2)
+        time.sleep(0.1)
+        self.io.setInputIntRegister(20, 0)  
+        
+       
 
     def set_pos_xyz(self, pos):
         """Setzt die Position des Roboters auf die angegebenen Koordinaten."""
